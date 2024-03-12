@@ -1,0 +1,37 @@
+name: Check
+on:
+  push:
+    branches:
+      - main
+defaults:
+  run:
+    shell: bash
+jobs:
+  build:
+    name: Check for ${{ matrix.os }} / ${{ matrix.toolchain }}
+    strategy:
+      matrix:
+        os:
+          - linux
+        toolchain:
+          - stable
+
+        include:
+          - os: linux
+            runson: ubuntu-latest
+
+    runs-on: ${{ matrix.runson }}
+
+    steps:
+      - uses: actions/checkout@v4 # with: fetch-tags: true # does not fetch tags °_°
+      - name: Get Tag Version
+        id: version
+        run: |
+          git fetch --depth=1 --tags --force
+          echo "VERSION=$(git describe --tags --match 'v*')" | tee -a "$GITHUB_OUTPUT"
+      - name: Install Toolchain
+        run:  rustup update ${{ matrix.toolchain }} && rustup default ${{ matrix.toolchain }}
+      - name: Test
+        run:  cargo test --verbose
+      - name: Build
+        run:  cargo build --verbose

@@ -1,0 +1,16 @@
+[package]
+name = "large-vector"
+version = "0.1.0"
+edition = "2021"
+authors = [ "wonko" ]
+description = "A Vector that does not need to copy on grow by using full mmap'd pages"
+license = "MIT OR Apache-2.0"
+repository = "http://github.com/wonkodv/large-vector"
+keywords = [ "mmap", "vector" ]
+categories  = [ "data-structures" ]
+readme = "readme.md"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+libc = "0.2.153"
