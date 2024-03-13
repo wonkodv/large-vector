@@ -159,6 +159,7 @@ impl<T> LVec<T> {
     /// # Panics
     ///
     /// Panics if the new capacity exceeds `isize::MAX` bytes.
+    /// Panics if `T` has higher alignment than a single page.
     ///
     /// # Examples
     ///
@@ -170,7 +171,16 @@ impl<T> LVec<T> {
     /// assert_eq!(vec.len(), 0);
     /// assert!(vec.capacity() >= 10);
     /// ```
+    ///
     pub fn with_capacity(capacity: usize) -> Self {
+        if std::mem::align_of::<T>() > page_size() {
+            panic!(
+                "T can not have higher alignment ({})  than a single page ({})",
+                std::mem::align_of::<T>(),
+                page_size()
+            );
+        }
+
         let len = 0;
         let size_in_bytes = Self::size_for_len(capacity);
 
@@ -378,10 +388,6 @@ impl<T> LVec<T> {
         // SAFETY: `len` is never greater than capacity, so add always returns a pointer into
         // the same allocation
         let pointer = unsafe { self.as_mut_ptr().add(self.len) };
-        assert!(
-            std::mem::align_of::<T>() <= 1 << ((pointer as usize).trailing_zeros()) as usize,
-            "expected {pointer:?} to have sufficient alignment"
-        );
         // SAFETY: pointer is previously unused, aligned and allocated, so writing (moving) value
         // is safe
         unsafe { std::ptr::write(pointer, value) };
@@ -751,4 +757,30 @@ mod tests {
         assert!(p != v.buffer);
         assert_eq!(std::str::from_utf8(v.as_slice()).unwrap(), "Test String");
     }
+
+    /// Test that Acceptable alignment passes, and, in the doctest, that too large alignment
+    /// panics.
+    ///
+    /// ```
+    /// #[repr(align(8192))]
+    /// struct OverAligned(u8);
+    /// let _ = LVec::<OverAligned>::new();
+    /// ```
+    #[test]
+    pub fn test_alignment_check() {
+        #[repr(align(4096))]
+        struct Aligned(u8);
+        let _ = LVec::<Aligned>::new();
+    }
 }
+
+/// Tests that should panic, as doctests, on a doc-hidden type.
+///
+/// ```should_panic
+/// # use large_vector::LVec;
+/// #[repr(align(8192))]
+/// struct OverAligned(u8);
+/// let _ = LVec::<OverAligned>::new();
+/// ```
+#[doc(hidden)]
+pub struct ShouldPanicDocTestHolder;
