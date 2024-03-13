@@ -15,12 +15,22 @@ I only have one test, where it grows until the virtual address changes , and dat
 Next Steps
 ----------
 
--   Implement a version with fallible grow, that does not relocate (no MREMAP_MAYMOVE),  and can hand out
-    `Pin<T>`. 
+-   Implement a version with fallible grow, that does not relocate (no
+    `MREMAP_MAYMOVE`),  and can hand out `Pin<&mut T>`.
 -   Find out if this has been done before
 -   Get someone to review this
 
 
+
+Memory Use
+----------
+
+Creating huge vectors does not increase the memory usage immediately.
+The following line only makes the OS assign 8GB of virtual address in the Process.
+
+    let mut vec = LVec::<usize>::with_capacity(1024 * 1000 * 1000);
+
+physical memory is only allocted when you actually use the page.
 
 
 License
