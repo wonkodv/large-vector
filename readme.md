@@ -6,6 +6,8 @@ Rust Vector for large amounts of data, that does not copy when growing, by using
 Maturity
 --------
 
+I made ths to learn about `mmap`.
+
 This is a first draft, testing out my idea. I copied the doctests from
 `alloc::vec::Vec` and they all pass.
 
@@ -15,11 +17,8 @@ I only have one test, where it grows until the virtual address changes , and dat
 Next Steps
 ----------
 
--   Implement a version with fallible grow, that does not relocate (no
-    `MREMAP_MAYMOVE`),  and can hand out `Pin<&mut T>`.
--   Find out if this has been done before
--   Get someone to review this
-
+-   On shrinking, `madvise(MADV_FREE)`
+-   Performance Test
 
 
 Memory Use
@@ -30,7 +29,9 @@ The following line only makes the OS assign 8GB of virtual address in the Proces
 
     let mut vec = LVec::<usize>::with_capacity(1024 * 1000 * 1000);
 
-physical memory is only allocted when you actually use the page.
+physical memory is only allocated when you actually use the page.
+
+The same is true for `alloc::vec::Vec`, so it does not seem that this crate provides any benefit over standard vector.
 
 
 License
